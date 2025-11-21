@@ -6,11 +6,25 @@ import models
 import security
 import database
 import auth, schemas
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Metallurgy MES API")
 
+# --- КОНФИГУРАЦИЯ CORS (Добавьте это) ---
+origins = [
+    "http://localhost:3000", # Стандартный порт для React (Лева)
+    "http://127.0.0.1:3000",
+    # Здесь потом будет адрес продакшена
+]
 
-# --- АВТОРИЗАЦИЯ ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"], # Разрешаем все методы (GET, POST, etc)
+    allow_headers=["*"], # Разрешаем все заголовки
+)
+# --- КОНЕЦ КОНФИГУРАЦИИ CORS ---
 
 @app.post("/token", response_model=schemas.Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
