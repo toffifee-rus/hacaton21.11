@@ -3,6 +3,7 @@ from typing import List, Optional
 from datetime import datetime
 from models import UserRole
 
+
 # --- Auth ---
 class Token(BaseModel):
     access_token: str
@@ -18,6 +19,19 @@ class UserOut(BaseModel):
     role: UserRole
     class Config:
         orm_mode = True
+
+class MaterialBase(BaseModel):
+    name: str
+    unit: str
+    quantity_in_stock: float
+
+class MaterialCreate(MaterialBase):
+    pass
+
+class MaterialOut(MaterialBase):
+    id: int
+    class Config:
+        from_attributes = True
 
 # --- Orders ---
 class OrderCreate(BaseModel):
@@ -56,3 +70,61 @@ class GanttTask(BaseModel):
 
 class GanttData(BaseModel):
     data: List[GanttTask]
+
+
+# --- СХЕМЫ ДЛЯ УПРАВЛЕНИЯ МАТЕРИАЛАМИ (CRUD) ---
+
+class MaterialBase(BaseModel):
+    name: str
+    unit: str
+    quantity_in_stock: float
+
+
+class MaterialCreate(MaterialBase):
+    pass
+
+
+class MaterialOut(MaterialBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+class TaskCompleteData(BaseModel):
+    defective_quantity: int = 0
+    comment: Optional[str] = None
+
+class ProductBase(BaseModel):
+    name: str
+    code: str
+    description: Optional[str] = None
+
+class ProductCreate(ProductBase):
+    pass
+
+class ProductOut(ProductBase):
+    id: int
+    # Примечание: техкарты будут редактироваться через отдельный роут
+    class Config:
+        from_attributes = True
+
+class AvailabilityCheckItem(BaseModel):
+    material_name: str
+    unit: str
+    stock_available: float
+    required_for_pending_orders: float
+    is_sufficient: bool
+    deficit_amount: float
+
+
+class MaterialReportRow(BaseModel):
+    order_id: int
+    product_name: str
+    stage_name: str
+    material_name: str
+    unit: str
+    quantity_spent: float
+    completion_date: Optional[datetime]
+
+    class Config:
+        from_attributes = True
