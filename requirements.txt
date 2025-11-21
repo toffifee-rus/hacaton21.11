@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary  # Драйвер для PostgreSQL
+passlib[bcrypt]  # Для хеширования паролей
+python-jose[cryptography] # Для JWT токенов
+pydantic
