@@ -12,7 +12,7 @@ models.Base.metadata.create_all(bind=engine)
 db = SessionLocal()
 
 
-# --- Хелпер-функции для упрощения создания данных ---
+# --- Хелпер-функции для упрощения создания данных (не изменены) ---
 
 def create_order_and_tasks(
         db: Session,
@@ -92,29 +92,42 @@ def seed_data():
     # --- 1. Пользователи (10 шт.) ---
 
     users = [
+        # DISPATCHERS
         models.User(username="chief_engineer", hashed_password=get_password_hash("1234"),
-                    role=models.UserRole.DISPATCHER),
+                    role=models.UserRole.DISPATCHER,
+                    last_name="Сергеев", first_name="Алексей", patronymic="Петрович"),
         models.User(username="dispatch_junior", hashed_password=get_password_hash("1234"),
-                    role=models.UserRole.DISPATCHER),
+                    role=models.UserRole.DISPATCHER,
+                    last_name="Иванова", first_name="Марина", patronymic="Викторовна"),
+
+        # TECHNOLOGISTS
         models.User(username="tech_sidorov", hashed_password=get_password_hash("1234"),
-                    role=models.UserRole.TECHNOLOGIST),
+                    role=models.UserRole.TECHNOLOGIST,
+                    last_name="Сидоров", first_name="Константин", patronymic="Дмитриевич"),
         models.User(username="tech_antonov", hashed_password=get_password_hash("1234"),
-                    role=models.UserRole.TECHNOLOGIST),
-        models.User(username="foreman_petrov", hashed_password=get_password_hash("1234"),
-                    role=models.UserRole.OPERATOR),
+                    role=models.UserRole.TECHNOLOGIST,
+                    last_name="Антонова", first_name="Елена", patronymic="Геннадьевна"),
+
+        # OPERATORS (Foremen, QC, etc.)
+        models.User(username="foreman_petrov", hashed_password=get_password_hash("1234"), role=models.UserRole.OPERATOR,
+                    last_name="Петров", first_name="Игорь", patronymic="Олегович"),
         models.User(username="operator_ivanov", hashed_password=get_password_hash("1234"),
-                    role=models.UserRole.OPERATOR),
+                    role=models.UserRole.OPERATOR,
+                    last_name="Иванов", first_name="Сергей", patronymic="Андреевич"),
         models.User(username="operator_smirnov", hashed_password=get_password_hash("1234"),
-                    role=models.UserRole.OPERATOR),
-        models.User(username="operator_vasin", hashed_password=get_password_hash("1234"),
-                    role=models.UserRole.OPERATOR),
+                    role=models.UserRole.OPERATOR,
+                    last_name="Смирнова", first_name="Ольга", patronymic="Ильинична"),
+        models.User(username="operator_vasin", hashed_password=get_password_hash("1234"), role=models.UserRole.OPERATOR,
+                    last_name="Васин", first_name="Денис", patronymic="Юрьевич"),
         models.User(username="operator_kuznetsov", hashed_password=get_password_hash("1234"),
-                    role=models.UserRole.OPERATOR),
-        models.User(username="qc_maria", hashed_password=get_password_hash("1234"), role=models.UserRole.OPERATOR),
+                    role=models.UserRole.OPERATOR,
+                    last_name="Кузнецов", first_name="Павел", patronymic="Николаевич"),
+        models.User(username="qc_maria", hashed_password=get_password_hash("1234"), role=models.UserRole.OPERATOR,
+                    last_name="Ковалева", first_name="Мария", patronymic="Сергеевна"),
     ]
     db.add_all(users)
     db.commit()
-    print("✅ 10 пользователей созданы.")
+    print("✅ 10 пользователей с ФИО созданы.")
 
     operator_user = db.query(models.User).filter(models.User.username == "foreman_petrov").first()
 
@@ -149,8 +162,6 @@ def seed_data():
     db.commit()
 
     # --- 4. Технологические карты (5 общих этапов) ---
-
-    # Этапы: 1. Литье, 2. Механическая обр., 3. Сварка, 4. Сборка, 5. Окраска
 
     # P1: Насос НЦ-10 (4 этапа)
     s1_p1 = models.TechStage(product_id=p1.id, name="Литье корпуса", order_in_chain=1, norm_time_minutes=300)
@@ -225,7 +236,7 @@ def seed_data():
     ])
 
     db.commit()
-    print("✅ 6 техкарт настроены с общими этапами (Литье, Мех. обр., Сварка, Сборка, Окраска).")
+    print("✅ 6 техкарт настроены с общими этапами.")
 
     # --- 5. Создание заказов (8 шт.) ---
 
@@ -264,7 +275,6 @@ def seed_data():
     )
 
     print("✅ 8 тестовых заказов с разными статусами созданы.")
-    print("✅ Материалы списаны для всех выполненных этапов.")
 
     db.close()
     print("🚀 Успех! База данных полностью готова к демонстрации (Металлургия/Машиностроение).")

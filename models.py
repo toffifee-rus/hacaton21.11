@@ -29,7 +29,14 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
-    hashed_password = Column(String)  # Храним НЕ пароль, а его хэш!
+    hashed_password = Column(String)
+
+    # --- НОВЫЕ ПОЛЯ ---
+    last_name = Column(String, default="")
+    first_name = Column(String, default="")
+    patronymic = Column(String, nullable=True)  # Отчество может отсутствовать
+    # --- КОНЕЦ НОВЫХ ПОЛЕЙ ---
+
     role = Column(Enum(UserRole), default=UserRole.OPERATOR)
     is_active = Column(Boolean, default=True)
 
