@@ -20,18 +20,6 @@ class UserOut(BaseModel):
     class Config:
         orm_mode = True
 
-class MaterialBase(BaseModel):
-    name: str
-    unit: str
-    quantity_in_stock: float
-
-class MaterialCreate(MaterialBase):
-    pass
-
-class MaterialOut(MaterialBase):
-    id: int
-    class Config:
-        from_attributes = True
 
 # --- Orders ---
 class OrderCreate(BaseModel):
@@ -51,13 +39,6 @@ class OrderOut(BaseModel):
         orm_mode = True
 
 # --- Tasks ---
-class TaskOut(BaseModel):
-    id: int
-    stage_name: str
-    status: str
-    order_id: int
-    class Config:
-        orm_mode = True
 
 # --- Gantt Data ---
 class GanttTask(BaseModel):
@@ -72,7 +53,6 @@ class GanttData(BaseModel):
     data: List[GanttTask]
 
 
-# --- СХЕМЫ ДЛЯ УПРАВЛЕНИЯ МАТЕРИАЛАМИ (CRUD) ---
 
 class MaterialBase(BaseModel):
     name: str
@@ -104,7 +84,31 @@ class ProductCreate(ProductBase):
 
 class ProductOut(ProductBase):
     id: int
-    # Примечание: техкарты будут редактироваться через отдельный роут
+    class Config:
+        from_attributes = True
+
+
+class TaskAssign(BaseModel):
+    """Схема для назначения ответственного пользователя на задачу."""
+    responsible_user_id: int
+
+
+class TaskOut(BaseModel):
+    id: int
+    order_id: int
+    stage_name: str
+    status: str
+
+    # --- НОВЫЕ ПОЛЯ ---
+    responsible_user_id: Optional[int] = None
+
+    # Полезное поле для фронтенда: полное ФИО или логин
+    responsible_username: Optional[str] = None
+    # --- КОНЕЦ НОВЫХ ПОЛЕЙ ---
+
+    start_time_actual: Optional[datetime] = None
+    end_time_actual: Optional[datetime] = None
+
     class Config:
         from_attributes = True
 

@@ -86,6 +86,26 @@ class StageMaterialRequirement(Base):  # Сколько материалов н�
 
 # --- ПРОИЗВОДСТВО (Task 3.2) --- [cite: 14]
 
+class ProductionTask(Base):
+    __tablename__ = "production_tasks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, ForeignKey("production_orders.id"))
+    stage_name = Column(String)
+    status = Column(String, default="pending")
+
+    # --- НОВОЕ ПОЛЕ: ОТВЕТСТВЕННОЕ ЛИЦО ---
+    responsible_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+
+    start_time_actual = Column(DateTime(timezone=True), nullable=True)
+    end_time_actual = Column(DateTime(timezone=True), nullable=True)
+
+    # Связи
+    order = relationship("ProductionOrder", back_populates="tasks")
+
+    # --- НОВАЯ СВЯЗЬ: ОТВЕТСТВЕННЫЙ ПОЛЬЗОВАТЕЛЬ ---
+    responsible_user = relationship("User")
+
 class ProductionOrder(Base):  # Заказ
     __tablename__ = "orders"
     id = Column(Integer, primary_key=True, index=True)

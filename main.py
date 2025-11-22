@@ -22,11 +22,9 @@ def get_db():
 
 app = FastAPI(title="Metallurgy MES API")
 
-# КОНФИГУРАЦИЯ CORS (Разрешаем React-фронтенду на порту 3000)
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    # Добавьте здесь адрес вашего продакшена
 ]
 
 app.add_middleware(
@@ -38,9 +36,7 @@ app.add_middleware(
 )
 
 
-# =======================================================
-#               I. АВТОРИЗАЦИЯ И ПОЛЬЗОВАТЕЛИ
-# =======================================================
+
 
 @app.post("/token", response_model=schemas.Token, tags=["Auth"])
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -57,9 +53,6 @@ def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
     return current_user
 
 
-# =======================================================
-#               II. СПРАВОЧНИКИ (Технолог/Диспетчер)
-# =======================================================
 
 @app.post("/products/", response_model=schemas.ProductOut, status_code=status.HTTP_201_CREATED, tags=["Reference"])
 def create_product(
@@ -213,6 +206,62 @@ def get_orders(db: Session = Depends(get_db), user=Depends(auth.get_current_user
 def get_all_tasks(db: Session = Depends(get_db), user=Depends(auth.get_current_user)):
     """Возвращает список всех производственных задач (этапов)."""
     return db.query(models.ProductionTask).all()
+
+
+@app.put("/tasks/{task_id}/assign", response_model=schemas.TaskOut, tags=["Production"])
+def assign_responsible_user(
+        task_id: int,
+        assignment_data: schemas.TaskAssign,
+        db: Session = Depends(get_db),
+        # Только Диспетчер может назначать
+        user: models.User = Depends(auth.RoleChecker([models.UserRole.DISPATCHER]))
+):
+    """
+    Назначает ответственного пользователя на производственную задачу (этап).
+    """
+    task = db.query(models.ProductionTask).filter(models.ProductionTask.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    responsible_user = db.query(models.User).filter(models.User.id == assignment_data.responsible_user_id).first()
+    if not responsible_user:
+        raise HTTPException(status_code=404, detail="Responsible user not found")
+
+    # Проверка роли: назначать можно только Операторов
+    if responsible_user.role != models.UserRole.OPERATOR:
+        raise HTTPException(status_code=400, detail="Only users with the role 'OPERATOR' can be assigned to tasks.")
+
+    task.responsible_user_id = assignment_data.responsible_user_id
+
+    # Если задача была "pending", ставим ее в "working" при назначении
+    if task.status == "pending":
+        task.status = "working"
+        task.start_time_actual = datetime.now(UTC)
+
+    db.commit()
+    db.refresh(task)
+
+    # Добавляем имя пользователя для вывода
+    task_out = schemas.TaskOut.model_validate(task)
+    task_out.responsible_username = responsible_user.username
+
+    return task_out
+
+
+@app.get("/tasks/", response_model=List[schemas.TaskOut], tags=["Production"])
+def get_all_tasks(db: Session = Depends(get_db), user=Depends(auth.get_current_user)):
+    """Возвращает список всех производственных задач (этапов)."""
+    tasks = db.query(models.ProductionTask).all()
+
+    # Добавляем имя ответственного для каждой задачи
+    tasks_out = []
+    for task in tasks:
+        task_out = schemas.TaskOut.model_validate(task)
+        if task.responsible_user:
+            task_out.responsible_username = task.responsible_user.username
+        tasks_out.append(task_out)
+
+    return tasks_out
 
 
 # --- Task Completion/Rework Logic (TaskCompleteData должна быть в schemas.py) ---
